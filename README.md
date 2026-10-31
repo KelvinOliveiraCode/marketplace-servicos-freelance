@@ -1,117 +1,105 @@
 # marketplace-servicos-freelance
 
-<div align="center">
-
 [English](README.en.md) · **Português (Brasil)**
 
-</div>
-
-[![Java 21](https://img.shields.io/badge/Java-21-%23007396?style=flat-square)](https://adoptium.net/) [![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3-%236DB33F?style=flat-square)](https://spring.io/projects/spring-boot) [![Maven](https://img.shields.io/badge/Maven-3.9-C71A36?style=flat-square&logo=apache-maven)](https://maven.apache.org/) [![JUnit 5](https://img.shields.io/badge/JUnit-5-25A162?style=flat-square&logo=junit5)](https://junit.org/junit5/) [![MIT License](https://img.shields.io/badge/License-MIT-f4c430?style=flat-square)](LICENSE)
-
-### Projeto funcional ,  marketplace-servicos-freelance
-
----
+![Java](https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3-6DB33F?style=flat-square&logo=spring) ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react) ![Maven](https://img.shields.io/badge/Maven-19%20testes-C71A36?style=flat-square&logo=apache-maven) ![MIT](https://img.shields.io/badge/License-MIT-f4c430?style=flat-square)
 
 ## O que é
 
-Projeto funcional ,  marketplace-servicos-freelance
+**Marketplace para serviços freelance** (fullstack): uma **API REST em Spring Boot** que gerencia o ciclo completo — **anúncios** de serviços, **propostas** de prestadores (aceitar/rejeitar) e **contratações** — mais uma **interface web em React + TypeScript + Vite**. Organizado como **DDD** (pacote `domain`). Persistência em **H2** em memória.
 
----
+## Status
 
-## Início Rápido
+Aplicação fullstack funcional (protótipo/laboratório). Testes da API passando (19 testes).
 
-```bash
-# Clone e entre
-git clone https://github.com/KelvinOliveiraCode/<repo>.git
-cd <repo>
+## Funcionalidades
 
-# Build e execute os testes
-./mvnw verify
+- **Anúncios** (`AnuncioController`): `POST/GET /anuncios`, `GET /anuncios/{id}`.
+- **Propostas** (`PropostaController`): `POST /propostas`, `POST /propostas/{id}/aceitar`, `POST /propostas/{id}/rejeitar`, `GET /propostas/anuncios/{anuncioId}`.
+- **Contratações** (`ContratacaoController`): `POST /contratacoes` (valida que a proposta está aceita), `GET /contratacoes/{id}`.
+- **Regras de negócio** (`BusinessRuleException`): contratação exige proposta aceita; recursos inexistentes retornam `404` com detalhe de erro.
+- **Modelo de domínio**: `Anuncio`, `Proposta`, `Contratacao` com enums de status (`StatusAnuncio`, `StatusProposta`, `StatusContratacao`).
+- **Frontend** em React (Vite) que consome a API.
 
-# Execute a aplicação
-./mvnw spring-boot:run
-# API disponível em http://localhost:8080
-# Swagger UI em http://localhost:8080/docs
+## Arquitetura
+
+Backend em **Spring Boot 3** com camadas controller → service → repository sobre **H2**, organizado em **DDD** (pacotes `domain/controller`, `domain/service`, `domain/modelo`, `domain/repository`). Frontend **React + Vite** em `frontend/`.
+
+```mermaid
+flowchart LR
+    UI[frontend React/Vite] -->|REST JSON| ANUN[AnuncioController]
+    UI --> PROP[PropostaController]
+    UI --> CONT[ContratacaoController]
+    ANUN & PROP & CONT --> SVC[domain/service]
+    SVC --> REPO[domain/repository]
+    REPO --> H2[(H2 memória)]
 ```
 
-## Como funciona
+## Stack
 
-Estrutura limpa e modular com separação de responsabilidades.
+- Backend: Java 21, Spring Boot 3, Spring Data JPA, H2, Maven
+- Frontend: React 18, TypeScript, Vite
 
----
+## Estrutura do repositório
 
-## Capacidades
+```
+marketplace-servicos-freelance/
+├── pom.xml · src/                # backend Spring Boot
+│   └── main/java/com/kelvinoliveira/marketplace/domain/
+│       ├── controller/ · service/ · repository/
+│       ├── modelo/ · dto/ · exception/
+│       └── MarketplaceApplication.java
+├── frontend/                     # UI React + Vite
+└── README.md
+```
 
-| Capacidade | Descrição |
-|------------|-------------|
-| API REST | Spring Boot 3, endpoints versionados, erros RFC 7807 |
-| Cálculo de Taxa | Strategy pattern ,  PIX R$0,49, Boleto R$2,49, Crédito 3,99%, Débito 1,89% |
-| Validação de Risco | Chain of Responsibility ,  HighValue -> Blocklist -> Velocity |
-| Registro de Transações | Registry Singleton em memória com trilha de auditoria completa |
-| Sistema de Eventos | Observer pattern ,  mensageria e métricas desacopladas |
-| Observabilidade | Endpoint /api/v1/observability expondo efeitos dos listeners |
-| Documentação da API | springdoc-openapi ,  Swagger UI em /docs, OpenAPI 3 em /api-docs |
-| Testes | JUnit 5, Mockito, MockMvc ,  testes de integração + unidade |
+## Pré-requisitos e instalação
 
+- JDK 21 e Maven 3.9+ (backend)
+- Node.js ≥ 18 (frontend)
 
----
+```bash
+# backend (API em http://localhost:8080)
+mvn spring-boot:run
 
+# frontend
+cd frontend && npm install && npm run dev
+```
 
+## Como executar
 
----
+```bash
+# criar anúncio
+curl -X POST http://localhost:8080/anuncios -H "Content-Type: application/json" \
+  -d '{"titulo":"Criar API Java","descricao":"API Spring Boot","valor":1500}'
+```
 
-## Perguntas Frequentes
+## Testes e qualidade
 
-<details>
-<summary><strong>O que é este projeto?</strong></summary>
+Comando real (verificado pelo agente):
 
-Um estudo/projeto em Java/Spring Boot demonstrando conceitos fundamentais.
+```bash
+mvn test
+# BUILD SUCCESS — 19 testes passando (0 falhas, 0 erros)
+```
 
-</details>
+## Decisões técnicas e trade-offs
 
-<details>
-<summary><strong>Como executar?</strong></summary>
+- **DDD (pacote `domain`)**: separa regras de negócio do framework; organiza controllers/serviços/repositórios.
+- **Enums de status** (anúncio/proposta/contratação): fluxo de vida explícito e validável.
+- **H2 em memória**: sem configuração, adequado a laboratório; sem persistência entre execuções.
 
-Veja [Início Rápido](#início-rápido) para comandos copiáveis.
+## Limitações conhecidas e roadmap
 
-</details>
+- Banco em memória e sem autenticação.
+- Não há fluxo de pagamento/avaliação entre as partes.
 
-<details>
-<summary><strong>Há testes?</strong></summary>
+## Processo de desenvolvimento
 
-Nenhum teste automatizado neste repositório.
+Projeto individual de Kelvin Oliveira, construído com agentes de IA orquestrados e revisado pelo autor. A modelagem de domínio, as regras e a revisão são do autor.
 
-</details>
+## Licença e autor
 
-<details>
-<summary><strong>Posso usar em produção?</strong></summary>
+MIT — Copyright (c) 2026 Kelvin Rebelo de Oliveira.
 
-Este é um **projeto de estudo/portfólio**. Revise e endureça (auth, persistência, monitoramento, etc.) antes de usar em produção.
-
-</details>
-
-
-
----
-
-## Documentação
-
-- **Código-Fonte** ,  Navegue pelo diretório `src/` para detalhes de implementação
-- **Referência da API** ,  Swagger UI em `/docs` ao executar
-- **Diagrama de Arquitetura** ,  Veja [architecture.mermaid](docs/architecture.mermaid) (se presente)
-- **Changelog** ,  [CHANGELOG.md](CHANGELOG.md) (se presente)
-- **Contribuindo** ,  [CONTRIBUTING.md](CONTRIBUTING.md) (se presente)
-
-## Licença
-
-[MIT](LICENSE) ,  Kelvin Oliveira
-
----
-
-<div align="center">
-
-**Construído com** · Java 21 + Spring Boot 3 + Maven
-
-**Autor** · [Kelvin Oliveira](https://github.com/KelvinOliveiraCode) · [Portfolio](https://kelvinoliveiracode.github.io/portfolio/)
-
-</div>
+**Autor**: [Kelvin Oliveira](https://github.com/KelvinOliveiraCode) · [Portfólio](https://kelvinoliveiracode.github.io/portfolio/)
